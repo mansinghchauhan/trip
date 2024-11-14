@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import TimelineChart from "./TripTimeLineChart"; // Importing the component for displaying the timeline chart
+import TripTimeLineChart from "./TripTimeLineChart"; // Importing the component for displaying the timeline chart
 import TripTimeLineList from "./TripTimeLineList"; // Importing the component for displaying the list of trips
 
 const TripTimeline = () => {
@@ -8,9 +8,12 @@ const TripTimeline = () => {
 
   return (
     <div>
-      {/* If a trip is selected, render the TimelineChart component */}
+      {/* If a trip is selected, render the TripTimeLineChart component */}
       {selectedTrip && (
-        <TimelineChart trip={selectedTrip} setSelectedTrip={setSelectedTrip} />
+        <TripTimeLineChart
+          trip={selectedTrip}
+          setSelectedTrip={setSelectedTrip}
+        />
       )}
 
       {/* If no trip is selected, render the TripTimeLineList component */}

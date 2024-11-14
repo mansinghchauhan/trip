@@ -1,8 +1,7 @@
 import { FaArrowLeft } from "react-icons/fa";
-
 import React from "react";
 
-const TripTimeline = ({ trip, setSelectedTrip }) => {
+const TripTimeLineChart = ({ trip, setSelectedTrip }) => {
   const startTime = new Date(trip.startTime);
   const endTime = new Date(trip.endTime);
 
@@ -30,6 +29,20 @@ const TripTimeline = ({ trip, setSelectedTrip }) => {
         }}
       >
         <FaArrowLeft /> <span>Back</span>
+      </div>
+
+      <div className="flex flex-col ">
+        {/* Red Triangle (Break) */}
+        <div className="flex items-center space-x-2">
+          <div className="w-0 h-5 border-l-8 border-r-8 border-t-8 border-t-transparent border-l-transparent border-r-transparent bg-red-500"></div>
+          <span>Break</span>
+        </div>
+
+        {/* Blue Triangle (Trip Time) */}
+        <div className="flex items-center space-x-2">
+          <div className="w-0 h-5 border-l-8 border-r-8 border-t-8 border-t-transparent border-l-transparent border-r-transparent bg-blue-500"></div>
+          <span>Trip Time</span>
+        </div>
       </div>
 
       {/* Vehicle Info */}
@@ -78,4 +91,4 @@ const TripTimeline = ({ trip, setSelectedTrip }) => {
   );
 };
 
-export default TripTimeline;
+export default TripTimeLineChart;

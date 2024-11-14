@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import TripCard from "../components/triplist/TripCard"; // Importing the TripCard component to display each trip
 import { httpRequest } from "../utils/auth"; // Importing the custom httpRequest utility for API calls
 
-const TripTimeLineList = ({ handleClick }) => {
+const TripTimeLineList = React.memo(({ handleClick }) => {
   // State to store the list of trips fetched from the API
   const [trips, setTrips] = useState([]);
 
@@ -41,6 +41,6 @@ const TripTimeLineList = ({ handleClick }) => {
       ))}
     </div>
   );
-};
+});
 
 export default TripTimeLineList;

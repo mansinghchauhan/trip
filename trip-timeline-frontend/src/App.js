@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import TripForm from "./page/TripForm";
 import TripTimeline from "./page/TripTimeline";
@@ -9,7 +9,6 @@ function App() {
     <>
       <BrowserRouter>
         <Headers />
-
         <Routes>
           <Route path="/" element={<TripTimeline />} />
           <Route path="/TripForm" element={<TripForm />} />
