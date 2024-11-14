@@ -1,0 +1,120 @@
+/* ====== CSS Imports Start ====== */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import "swiper/css";
+@import "/src/assets/styles/fonts.css";
+
+/* ====== CSS Imports End ====== */
+
+/* ====== Common CSS Start ====== */
+
+@layer {
+  * {
+    @apply font-nunito;
+  }
+
+  html {
+    @apply !pr-0;
+  }
+
+  .flex-center {
+    @apply flex items-center justify-center;
+  }
+}
+
+h1 {
+  @apply font-extrabold font-nunito;
+}
+
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply font-black font-arima;
+}
+
+body::-webkit-scrollbar,
+.common-scroll::-webkit-scrollbar,
+.table-responsive::-webkit-scrollbar {
+  @apply w-1 h-1 rounded;
+}
+
+body::-webkit-scrollbar-track,
+.common-scroll::-webkit-scrollbar-track,
+.table-responsive::-webkit-scrollbar-track {
+  @apply w-1 bg-white rounded;
+}
+
+body::-webkit-scrollbar-thumb,
+.common-scroll::-webkit-scrollbar-thumb,
+.table-responsive::-webkit-scrollbar-thumb {
+  @apply w-1 bg-primary rounded;
+}
+
+/* ====== Common CSS End ====== */
+
+/* ====== Title CSS End ====== */
+
+.titleWrap {
+  @apply relative mb-12 md:mb-20 2xl:mb-24;
+}
+
+.h2Title {
+  @apply relative text-2xl md:text-4xl 2xl:text-5xl uppercase text-white font-black;
+}
+
+.h2Title:not(.notMargin) {
+  @apply mb-4 md:mb-6 2xl:mb-10;
+}
+
+.subTitle {
+  @apply text-white font-medium text-base md:text-xl 2xl:text-2xl;
+}
+
+.subTitle:not(.notMargin) {
+  @apply mb-8 md:mb-12 2xl:mb-16;
+}
+
+/* ====== Title CSS End ====== */
+
+/* ====== SliderArrow CSS Start ====== */
+
+.SliderArrow {
+  @apply absolute flex items-center justify-center rounded-full bg-btnBg hover:bg-btnBg h-10 md:h-12 2xl:h-[60px] w-10 md:w-12 2xl:w-[60px] min-w-10 md:min-w-12 2xl:min-w-[60px] text-xl 2xl:text-3xl text-white disabled:hidden;
+}
+
+.transit {
+  transition: 0.3s ease-in-out;
+}
+
+/* ====== SliderArrow CSS End ====== */
+
+/* ====== Common Card Start ====== */
+
+.card {
+  @apply relative rounded-[20px] border border-white/20 shadow-[0px_4px_8px_#835BD8] bg-[linear-gradient(98.75deg,_rgba(255,255,255,0.2)_0.78%,_rgba(82,0,255,0.2)_100%)];
+}
+
+/* ====== Common Card End ====== */
+.video-wrapper {
+  padding: 0px;
+}
+
+
+.player-wrapper {
+  position: relative;
+  padding-top: 56.25%; 
+}
+
+.react-player {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.player_btn{
+  top: 40%;
+}
