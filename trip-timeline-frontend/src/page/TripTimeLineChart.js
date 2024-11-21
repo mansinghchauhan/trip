@@ -1,94 +1,171 @@
-import { FaArrowLeft } from "react-icons/fa";
-import React from "react";
+import { filterTripdataWithTime } from "../utils/Chart";
 
-const TripTimeLineChart = ({ trip, setSelectedTrip }) => {
-  const startTime = new Date(trip.startTime);
-  const endTime = new Date(trip.endTime);
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 
-  const breaks = trip.breaks.map((b) => ({
-    start: new Date(b.start),
-    end: new Date(b.end),
+const CHART_WIDTH = 1200;
+const HOURS_IN_DAY = 24;
+const MS_IN_HOUR = 3600000;
+
+const generateTimeLabels = () => {
+  const labels = [];
+  for (let i = 0; i <= HOURS_IN_DAY; i++) {
+    labels.push({
+      time: i < 10 ? `0${i}:00` : `${i}:00`,
+      position: (i / HOURS_IN_DAY) * CHART_WIDTH,
+    });
+  }
+  return labels;
+};
+
+const calculateSegmentWidth = (duration) => {
+  const totalDayInMs = HOURS_IN_DAY * MS_IN_HOUR;
+  return (duration / totalDayInMs) * CHART_WIDTH;
+};
+
+const processBlocks = (blocks) => {
+  const result = [];
+  let currentBlock = null;
+
+  for (const block of blocks) {
+    if (!currentBlock || currentBlock.type !== block.type) {
+      if (currentBlock) {
+        result.push({ ...currentBlock });
+      }
+      currentBlock = {
+        ...block,
+        style: {
+          ...block.style,
+          width: parseInt(block.style.width, 10),
+        },
+      };
+    } else {
+      currentBlock.style.width += parseInt(block.style.width, 10);
+    }
+  }
+
+  if (currentBlock) {
+    result.push({ ...currentBlock });
+  }
+
+  return result.map((block) => ({
+    ...block,
+    style: {
+      ...block.style,
+      width: `${block.style.width}px`,
+    },
+    className: `${block.className.replace(/w-\[\d+px\]/g, "")} w-[${
+      block.style.width
+    }]`,
   }));
+};
 
-  // Generate the timeline hours (24-hour scale)
-  const hours = Array.from({ length: 24 }, (_, i) => i);
-
-  // Function to calculate percentage offset of time on a 24-hour scale
-  const getTimePercentage = (time) => {
-    const midnight = new Date(time);
-    midnight.setHours(0, 0, 0, 0); // Set to midnight of the same day
-    return ((time - midnight) / (24 * 60 * 60 * 1000)) * 100;
-  };
+const Chart = () => {
+  const { tripId } = useParams();
+  const timeLabels = generateTimeLabels();
+  const [selectedTip, setSelectedTrips] = useState(null);
+  useEffect(() => {
+    const trips = JSON.parse(localStorage.getItem("list"));
+    const filteredData = filterTripdataWithTime({
+      trips: trips,
+      selectedId: tripId,
+    });
+    setSelectedTrips(filteredData.filteredTrips);
+  }, []);
 
   return (
-    <div className="flex flex-col space-y-4 p-4">
-      <div
-        className="flex items-center gap-3 cursor-pointer"
-        onClick={() => {
-          setSelectedTrip(null);
-        }}
-      >
-        <FaArrowLeft /> <span>Back</span>
-      </div>
-
-      <div className="flex flex-col ">
-        {/* Red Triangle (Break) */}
-        <div className="flex items-center space-x-2">
-          <div className="w-0 h-5 border-l-8 border-r-8 border-t-8 border-t-transparent border-l-transparent border-r-transparent bg-red-500"></div>
-          <span>Break</span>
-        </div>
-
-        {/* Blue Triangle (Trip Time) */}
-        <div className="flex items-center space-x-2">
-          <div className="w-0 h-5 border-l-8 border-r-8 border-t-8 border-t-transparent border-l-transparent border-r-transparent bg-blue-500"></div>
-          <span>Trip Time</span>
+    <div className="flex flex-col h-full w-full border border-[#19181a]">
+      {/* Time Axis */}
+      <div className="h-[80px] bg-blue-700 text-white flex">
+        <div className="w-[150px]" />
+        <div className="flex-grow flex items-center">
+          {timeLabels.map((label, index) => (
+            <div
+              key={index}
+              style={{
+                width: `${CHART_WIDTH / HOURS_IN_DAY}px`,
+              }}
+              className="text-center text-sm text-white font-bold"
+            >
+              {label.time}
+            </div>
+          ))}
         </div>
       </div>
+      {/* Vehicle Rows */}
+      {selectedTip && (
+        <div className="flex-grow flex flex-col">
+          {selectedTip.map((trip) => {
+            const blocks = [];
+            const tripStartTime = new Date(trip.startTime).getTime();
+            const tripEndTime = new Date(trip.endTime).getTime();
+            const totalDayStart = new Date(
+              new Date(trip.startTime).setUTCHours(0, 0, 0, 0)
+            ).getTime();
+            const totalDayEnd = totalDayStart + HOURS_IN_DAY * MS_IN_HOUR;
 
-      {/* Vehicle Info */}
-      <div className="text-xl font-bold">Vehicle: {trip.vehicleNumber}</div>
+            let currentTime = totalDayStart;
 
-      {/* Timeline */}
-      <div className="relative w-full h-16 bg-gray-200 rounded-md">
-        <div className="absolute top-0 left-0 flex w-full justify-between px-2 mt-3">
-          {hours.map((hour) => {
-            // if (!hour) return <></>;
-            return <div key={hour} className="text-xs">{`${hour}:00`}</div>;
+            while (currentTime < totalDayEnd) {
+              const nextTime = Math.min(
+                currentTime + MS_IN_HOUR / 2,
+                totalDayEnd
+              );
+
+              let color;
+              const isBreak = trip.breaks.some(
+                (b) =>
+                  currentTime < new Date(b.end).getTime() &&
+                  nextTime > new Date(b.start).getTime()
+              );
+
+              let type;
+              const isJourney =
+                currentTime >= tripStartTime && nextTime <= tripEndTime;
+              if (isBreak) {
+                color = "bg-red-300";
+                type = "B";
+              } else if (isJourney) {
+                color = "bg-green-500";
+                type = "J";
+              } else {
+                color = "bg-white";
+                type = "I";
+              }
+
+              const segmentWidth = calculateSegmentWidth(
+                nextTime - currentTime
+              );
+
+              blocks.push({
+                type,
+                index: currentTime,
+                className: `${color} h-[40px] rounded-sm mx-[2px]`,
+                style: { width: `${segmentWidth}px` },
+              });
+
+              currentTime = nextTime;
+            }
+
+            const result = processBlocks(blocks);
+
+            return (
+              <div key={trip._id} className="h-[80px] text-white flex">
+                <div className="w-[150px] h-full bg-blue-700 flex justify-center items-center">
+                  {trip.vehicleNumber}
+                </div>
+                <div className="flex-grow flex items-center border-solid border-[1px] border-t-0 border-x-0 border-[#19181a]">
+                  {result.map((block) => (
+                    <div {...block} />
+                  ))}
+                </div>
+              </div>
+            );
           })}
         </div>
-        <div className="absolute top-0 left-0 w-full h-1 bg-gray-500" />
-
-        {/* Trip Duration Highlight */}
-        <div
-          className="absolute top-0 h-4 bg-blue-500 rounded-md mt-10 opacity-50"
-          style={{
-            left: `${getTimePercentage(startTime)}%`,
-            width: `${
-              getTimePercentage(endTime) - getTimePercentage(startTime)
-            }%`,
-          }}
-        >
-          <span className="absolute text-white text-xs left-1 top-1"></span>
-        </div>
-
-        {/* Breaks */}
-        {breaks.map((brk, index) => (
-          <div
-            key={index}
-            className="absolute top-0 h-4 bg-red-500 mt-10"
-            style={{
-              left: `${getTimePercentage(brk.start)}%`,
-              width: `${
-                getTimePercentage(brk.end) - getTimePercentage(brk.start)
-              }%`,
-            }}
-          >
-            <span className="absolute text-white text-xs left-1 top-1"></span>
-          </div>
-        ))}
-      </div>
+      )}
     </div>
   );
 };
 
-export default TripTimeLineChart;
+export default Chart;

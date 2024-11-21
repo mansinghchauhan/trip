@@ -16,6 +16,7 @@ const TripTimeLineList = React.memo(({ handleClick }) => {
         formData: {}, // Empty data object since no form data is required
         callBack: (data, msg) => {
           // On success, set the trips state with the fetched data
+          localStorage.setItem("list", JSON.stringify(data));
           setTrips(data);
         },
         isPublic: false, // Indicates that this request is not public

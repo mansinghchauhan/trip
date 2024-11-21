@@ -1,5 +1,6 @@
 import React from "react";
 import { FaCar, FaMapMarkerAlt, FaCalendarAlt } from "react-icons/fa";
+import { Link } from "react-router-dom";
 import bus_img from "../../assets/images/bus_img.png";
 const TripCard = ({ trip, handleClick }) => {
   // Calculate trip duration in hours and minutes
@@ -13,43 +14,47 @@ const TripCard = ({ trip, handleClick }) => {
   };
 
   return (
-    <div
-      className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden flex items-center space-x-6 p-4 cursor-pointer"
-      onClick={() => {
-        handleClick(trip);
-      }}
-    >
-      {/* Left Side - Trip Details */}
-      <div className="flex-1">
-        <h2 className="text-xl font-semibold text-gray-800">{trip.tripName}</h2>
-        <p className="text-gray-600">{trip.vehicleNumber}</p>
+    <Link to={`/tripchart/${trip._id}`}>
+      <div
+        className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden flex items-center space-x-6 p-4 cursor-pointer mt-5"
+        // onClick={() => {
+        //   handleClick(trip);
+        // }}
+      >
+        {/* Left Side - Trip Details */}
+        <div className="flex-1">
+          <h2 className="text-xl font-semibold text-gray-800">
+            {trip.tripName}
+          </h2>
+          <p className="text-gray-600">{trip.vehicleNumber}</p>
 
-        <div className="mt-4 flex items-center text-gray-700">
-          <FaCar className="mr-2 text-blue-600" />
-          <p>{trip.vehicleType}</p>
-        </div>
+          <div className="mt-4 flex items-center text-gray-700">
+            <FaCar className="mr-2 text-blue-600" />
+            <p>{trip.vehicleType}</p>
+          </div>
 
-        {/* <div className="mt-2 flex items-center text-gray-700">
+          {/* <div className="mt-2 flex items-center text-gray-700">
           <FaMapMarkerAlt className="mr-2 text-red-600" />
           <p>
             {trip.startLocation} to {trip.endLocation}
           </p>
         </div> */}
 
-        <div className="mt-4 flex justify-between text-gray-700">
-          <div className="flex items-center">
-            <FaCalendarAlt className="mr-2 text-yellow-600" />
-            <p>Duration</p>
+          <div className="mt-4 flex justify-between text-gray-700">
+            <div className="flex items-center">
+              <FaCalendarAlt className="mr-2 text-yellow-600" />
+              <p>Duration</p>
+            </div>
+            <p>{calculateDuration(trip.startTime, trip.endTime)}</p>
           </div>
-          <p>{calculateDuration(trip.startTime, trip.endTime)}</p>
+        </div>
+
+        {/* Right Side - Trip Image or Additional Info (Optional) */}
+        <div className="w-32 h-32 bg-gray-300 rounded-lg">
+          <img src={bus_img} />
         </div>
       </div>
-
-      {/* Right Side - Trip Image or Additional Info (Optional) */}
-      <div className="w-32 h-32 bg-gray-300 rounded-lg">
-        <img src={bus_img} />
-      </div>
-    </div>
+    </Link>
   );
 };
 
