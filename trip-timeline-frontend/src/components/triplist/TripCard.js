@@ -2,7 +2,7 @@ import React from "react";
 import { FaCar, FaMapMarkerAlt, FaCalendarAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import bus_img from "../../assets/images/bus_img.png";
-const TripCard = ({ trip, handleClick }) => {
+const TripCard = ({ trip }) => {
   // Calculate trip duration in hours and minutes
   const calculateDuration = (startTime, endTime) => {
     const start = new Date(startTime);

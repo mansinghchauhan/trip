@@ -100,7 +100,7 @@ const Chart = () => {
             const tripStartTime = new Date(trip.startTime).getTime();
             const tripEndTime = new Date(trip.endTime).getTime();
             const totalDayStart = new Date(
-              new Date(trip.startTime).setUTCHours(0, 0, 0, 0)
+              new Date(trip.startTime).setHours(0, 0, 0, 0)
             ).getTime();
             const totalDayEnd = totalDayStart + HOURS_IN_DAY * MS_IN_HOUR;
 
