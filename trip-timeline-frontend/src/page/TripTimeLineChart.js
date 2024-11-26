@@ -3,9 +3,67 @@ import { filterTripdataWithTime } from "../utils/Chart";
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 
-const CHART_WIDTH = 1200;
-const HOURS_IN_DAY = 24;
-const MS_IN_HOUR = 3600000;
+let CHART_WIDTH = 0;
+const HOURS_IN_DAY = 25;
+
+function convertTripToTimeIntervals(trip) {
+  const { startTime, endTime, breaks } = trip;
+
+  // Helper function to convert ISO time to minutes from midnight
+  function timeToMinutesFromMidnight(isoTime) {
+    const date = new Date(isoTime);
+    return date.getHours() * 60 + date.getMinutes();
+  }
+
+  const tripStartMinutes = timeToMinutesFromMidnight(startTime);
+  const tripEndMinutes = timeToMinutesFromMidnight(endTime);
+
+  // If there are no breaks
+  if (!breaks || breaks.length === 0) {
+    return [tripStartMinutes, tripEndMinutes - tripStartMinutes];
+  }
+
+  // Sort breaks by start time (optional, ensures consistency)
+  const sortedBreaks = breaks.sort(
+    (a, b) => new Date(a.start) - new Date(b.start)
+  );
+
+  const intervals = [tripStartMinutes];
+
+  // Time from trip start to first break start
+  intervals.push(
+    timeToMinutesFromMidnight(sortedBreaks[0].start) - tripStartMinutes
+  );
+
+  for (let i = 0; i < sortedBreaks.length; i++) {
+    const breakStart = timeToMinutesFromMidnight(sortedBreaks[i].start);
+    const breakEnd = timeToMinutesFromMidnight(sortedBreaks[i].end);
+
+    // Time during the break
+    intervals.push(breakEnd - breakStart);
+
+    // Time between this break's end and the next break's start (or trip end)
+    if (i < sortedBreaks.length - 1) {
+      const nextBreakStart = timeToMinutesFromMidnight(
+        sortedBreaks[i + 1].start
+      );
+      intervals.push(nextBreakStart - breakEnd);
+    } else {
+      // Time from last break's end to trip end
+      intervals.push(tripEndMinutes - breakEnd);
+    }
+  }
+
+  return intervals;
+}
+
+function isEvenOrOdd(number) {
+  if (number % 2 === 0) {
+    return "even";
+  } else {
+    return "odd";
+  }
+}
 
 const generateTimeLabels = () => {
   const labels = [];
@@ -18,52 +76,64 @@ const generateTimeLabels = () => {
   return labels;
 };
 
-const calculateSegmentWidth = (duration) => {
-  const totalDayInMs = HOURS_IN_DAY * MS_IN_HOUR;
-  return (duration / totalDayInMs) * CHART_WIDTH;
+const ColorBar = ({ color, value, oneMinuteInChartWidth }) => {
+  return (
+    <div
+      style={{
+        width: `${oneMinuteInChartWidth * value}px`,
+        height: "1vh",
+        backgroundColor: color,
+      }}
+    />
+  );
 };
-
-const processBlocks = (blocks) => {
-  const result = [];
-  let currentBlock = null;
-
-  for (const block of blocks) {
-    if (!currentBlock || currentBlock.type !== block.type) {
-      if (currentBlock) {
-        result.push({ ...currentBlock });
-      }
-      currentBlock = {
-        ...block,
-        style: {
-          ...block.style,
-          width: parseInt(block.style.width, 10),
-        },
-      };
+const renderTimeChartUsingIntervals = (
+  intervals = [],
+  oneMinuteInChartWidth
+) => {
+  return intervals.map((value, index) => {
+    if (index === 0) {
+      return (
+        <ColorBar
+          color="transparent"
+          value={value}
+          oneMinuteInChartWidth={oneMinuteInChartWidth}
+        />
+      );
+    } else if (index === intervals.length) {
+      return (
+        <ColorBar
+          color="red"
+          value={value}
+          oneMinuteInChartWidth={oneMinuteInChartWidth}
+        />
+      );
+    } else if (isEvenOrOdd(index) === "even") {
+      return (
+        <ColorBar
+          color="red"
+          value={value}
+          oneMinuteInChartWidth={oneMinuteInChartWidth}
+        />
+      );
     } else {
-      currentBlock.style.width += parseInt(block.style.width, 10);
+      return (
+        <ColorBar
+          color="green"
+          value={value}
+          oneMinuteInChartWidth={oneMinuteInChartWidth}
+        />
+      );
     }
-  }
-
-  if (currentBlock) {
-    result.push({ ...currentBlock });
-  }
-
-  return result.map((block) => ({
-    ...block,
-    style: {
-      ...block.style,
-      width: `${block.style.width}px`,
-    },
-    className: `${block.className.replace(/w-\[\d+px\]/g, "")} w-[${
-      block.style.width
-    }]`,
-  }));
+  });
 };
 
 const Chart = () => {
   const { tripId } = useParams();
-  const timeLabels = generateTimeLabels();
-  const [selectedTip, setSelectedTrips] = useState(null);
+  let timeLabels = generateTimeLabels();
+
+  const oneMinuteInChartWidth = ((CHART_WIDTH / HOURS_IN_DAY) * 1) / 60;
+  const [selectedTrip, setSelectedTrips] = useState(null);
   useEffect(() => {
     const trips = JSON.parse(localStorage.getItem("list"));
     const filteredData = filterTripdataWithTime({
@@ -71,99 +141,55 @@ const Chart = () => {
       selectedId: tripId,
     });
     setSelectedTrips(filteredData.filteredTrips);
+
+    CHART_WIDTH = document
+      .getElementById("timescale")
+      .getBoundingClientRect().width;
   }, []);
 
+  const timeIntervals = selectedTrip
+    ? selectedTrip.map((trip) => convertTripToTimeIntervals(trip))
+    : [];
+
   return (
-    <div className="flex flex-col h-full w-full border border-[#19181a]">
-      {/* Time Axis */}
-      <div className="h-[80px] bg-blue-700 text-white flex">
-        <div className="w-[150px]" />
-        <div className="flex-grow flex items-center">
-          {timeLabels.map((label, index) => (
-            <div
-              key={index}
-              style={{
-                width: `${CHART_WIDTH / HOURS_IN_DAY}px`,
-              }}
-              className="text-center text-sm text-white font-bold"
-            >
-              {label.time}
-            </div>
-          ))}
-        </div>
-      </div>
-      {/* Vehicle Rows */}
-      {selectedTip && (
-        <div className="flex-grow flex flex-col">
-          {selectedTip.map((trip) => {
-            const blocks = [];
-            const tripStartTime = new Date(trip.startTime).getTime();
-            const tripEndTime = new Date(trip.endTime).getTime();
-            const totalDayStart = new Date(
-              new Date(trip.startTime).setHours(0, 0, 0, 0)
-            ).getTime();
-            const totalDayEnd = totalDayStart + HOURS_IN_DAY * MS_IN_HOUR;
-
-            let currentTime = totalDayStart;
-
-            while (currentTime < totalDayEnd) {
-              const nextTime = Math.min(
-                currentTime + MS_IN_HOUR / 2,
-                totalDayEnd
-              );
-
-              let color;
-              const isBreak = trip.breaks.some(
-                (b) =>
-                  currentTime < new Date(b.end).getTime() &&
-                  nextTime > new Date(b.start).getTime()
-              );
-
-              let type;
-              const isJourney =
-                currentTime >= tripStartTime && nextTime <= tripEndTime;
-              if (isBreak) {
-                color = "bg-red-300";
-                type = "B";
-              } else if (isJourney) {
-                color = "bg-green-500";
-                type = "J";
-              } else {
-                color = "bg-white";
-                type = "I";
-              }
-
-              const segmentWidth = calculateSegmentWidth(
-                nextTime - currentTime
-              );
-
-              blocks.push({
-                type,
-                index: currentTime,
-                className: `${color} h-[40px] rounded-sm mx-[2px]`,
-                style: { width: `${segmentWidth}px` },
-              });
-
-              currentTime = nextTime;
-            }
-
-            const result = processBlocks(blocks);
-
+    <div>
+      <div className="flex">
+        <div className="w-[5vw]"></div>
+        <div className="w-[2vw]"></div>
+        <div className="h-10 flex flex-row w-[93vw] mt-4" id="timescale">
+          {timeLabels.map((label, index) => {
             return (
-              <div key={trip._id} className="h-[80px] text-white flex">
-                <div className="w-[150px] h-full bg-blue-700 flex justify-center items-center">
-                  {trip.vehicleNumber}
-                </div>
-                <div className="flex-grow flex items-center border-solid border-[1px] border-t-0 border-x-0 border-[#19181a]">
-                  {result.map((block) => (
-                    <div {...block} />
-                  ))}
-                </div>
+              <div
+                key={index}
+                style={{
+                  minWidth: `${CHART_WIDTH / HOURS_IN_DAY}px`,
+                }}
+                className="text-sm font-bold text-black"
+              >
+                <p className="relative -left-4">
+                  {index > HOURS_IN_DAY - 1 ? "" : label.time}
+                </p>
               </div>
             );
           })}
         </div>
-      )}
+      </div>
+      {timeIntervals.map((intervalList, index) => {
+        return (
+          <div className="flex" key={index}>
+            <div className="w-[5vw] align-middle justify-center">
+              {selectedTrip[index].vehicleNumber}
+            </div>
+            <div className="w-[2vw]"></div>
+            <div className="h-10 w-[93vw] overflow-hidden flex">
+              {renderTimeChartUsingIntervals(
+                intervalList,
+                oneMinuteInChartWidth
+              )}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };

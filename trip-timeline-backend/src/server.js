@@ -33,10 +33,7 @@ app.use(NotFoundMiddleware);
 const main = () => {
   // Connect to MongoDB using connection string from environment variables
   mongoose
-    .connect(process.env.DATABASE_URL, {
-      useNewUrlParser: true, // Use new URL parser
-      useUnifiedTopology: true, // Use new server discovery and monitoring engine
-    })
+    .connect(process.env.DATABASE_URL)
     .then(() => console.log("MongoDB connected")) // Log on successful connection
     .catch((err) => console.log(err)); // Log errors if connection fails
 

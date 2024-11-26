@@ -21,9 +21,6 @@ export const filterTripdataWithTime = ({ trips, selectedId }) => {
       hour12: false,
     });
 
-    console.log(startTimeFormatted);
-    console.log(endTimeFormatted);
-
     // Filter trips based on the selected trip's time range
     const filteredTrips = trips.filter((trip) => {
       const tripStartTime = new Date(trip.startTime);
