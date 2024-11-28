@@ -81,9 +81,10 @@ const ColorBar = ({ color, value, oneMinuteInChartWidth }) => {
     <div
       style={{
         width: `${oneMinuteInChartWidth * value}px`,
-        height: "1vh",
+        height: "3vh",
         backgroundColor: color,
       }}
+      className="rounded-e-2xl"
     />
   );
 };
@@ -100,10 +101,32 @@ const renderTimeChartUsingIntervals = (
           oneMinuteInChartWidth={oneMinuteInChartWidth}
         />
       );
-    } else if (index === intervals.length) {
+    }
+    //  else if (index === 1) {
+    //   return (
+    //     <ColorBar
+    //       color="green"
+    //       value={value}
+    //       oneMinuteInChartWidth={oneMinuteInChartWidth}
+    //       pointed={true}
+    //     />
+    //   );
+    // } else if (index === intervals.length - 1) {
+    //   return (
+    //     <ColorBar
+    //       color="green"
+    //       value={value}
+    //       oneMinuteInChartWidth={oneMinuteInChartWidth}
+    //       pointed={true}
+    //       from="e"
+    //     />
+    //   );
+    // }
+    // 226eb4
+    else if (index === intervals.length) {
       return (
         <ColorBar
-          color="red"
+          color="transparent"
           value={value}
           oneMinuteInChartWidth={oneMinuteInChartWidth}
         />
@@ -111,7 +134,7 @@ const renderTimeChartUsingIntervals = (
     } else if (isEvenOrOdd(index) === "even") {
       return (
         <ColorBar
-          color="red"
+          color="transparent"
           value={value}
           oneMinuteInChartWidth={oneMinuteInChartWidth}
         />
@@ -153,8 +176,10 @@ const Chart = () => {
 
   return (
     <div>
-      <div className="flex">
-        <div className="w-[5vw]"></div>
+      <div className="flex bg-darkblue">
+        <div className="w-[11vw] text-center m-auto text-white font-bold">
+          Vehicle No.
+        </div>
         <div className="w-[2vw]"></div>
         <div className="h-10 flex flex-row w-[93vw] mt-4" id="timescale">
           {timeLabels.map((label, index) => {
@@ -164,7 +189,7 @@ const Chart = () => {
                 style={{
                   minWidth: `${CHART_WIDTH / HOURS_IN_DAY}px`,
                 }}
-                className="text-sm font-bold text-black"
+                className="text-sm font-bold text-white"
               >
                 <p className="relative -left-4">
                   {index > HOURS_IN_DAY - 1 ? "" : label.time}
@@ -177,11 +202,11 @@ const Chart = () => {
       {timeIntervals.map((intervalList, index) => {
         return (
           <div className="flex" key={index}>
-            <div className="w-[5vw] align-middle justify-center">
+            <div className="w-[8vw] align-middle justify-center bg-darkblue py-[18px] uppercase text-white pl-2 border-t border-t-darkerblue">
               {selectedTrip[index].vehicleNumber}
             </div>
-            <div className="w-[2vw]"></div>
-            <div className="h-10 w-[93vw] overflow-hidden flex">
+            <div className="w-[2vw] border-b"></div>
+            <div className="w-[93vw] overflow-hidden flex mt-5 border-b">
               {renderTimeChartUsingIntervals(
                 intervalList,
                 oneMinuteInChartWidth
